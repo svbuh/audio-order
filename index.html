@@ -272,6 +272,36 @@
             transform: none;
             box-shadow: none;
         }
+
+        /* E-Mail Button Style */
+        .email-button {
+            background: linear-gradient(135deg, #34c759 0%, #30d158 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);
+            margin-top: 12px;
+        }
+        
+        .email-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(52, 199, 89, 0.4);
+        }
+
+        /* E-Mail Section */
+        .email-section {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 16px;
+        }
         
         .fields-grid {
             display: grid;
@@ -519,6 +549,18 @@
                     <span id="transcriptionText"></span>
                 </div>
             </div>
+
+            <!-- E-Mail Section -->
+            <div class="email-section" id="emailSection" style="display: none;">
+                <h3>📧 Bestellung per E-Mail senden</h3>
+                <div class="instruction">
+                    <strong>📨 E-Mail wird an info@beko-group.com gesandt</strong><br>
+                    Ihr Standard-E-Mail-Client öffnet sich mit vorausgefüllten Daten.
+                </div>
+                <button class="email-button" id="emailButton" onclick="vertriebsApp.sendEmail()">
+                    📨 ADM Auftrag per E-Mail senden
+                </button>
+            </div>
         </div>
     </div>
 
@@ -575,7 +617,7 @@
         class GeminiAPI {
             constructor(apiKey) {
                 this.apiKey = apiKey;
-                this.baseURL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent';
+                this.baseURL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent';
             }
 
             async callAPI(prompt, audioBase64 = null) {
@@ -842,6 +884,7 @@ Antwort im gleichen JSON-Format:
                 this.audioHandler = new AudioHandler();
                 this.geminiAPI = null;
                 this.selectedCustomer = null;
+                this.orderData = null;
                 
                 this.initElements();
                 this.populateCustomers();
@@ -865,6 +908,7 @@ Antwort im gleichen JSON-Format:
                 this.fieldsSection = document.getElementById('fieldsSection');
                 this.resultSection = document.getElementById('resultSection');
                 this.transcriptionText = document.getElementById('transcriptionText');
+                this.emailSection = document.getElementById('emailSection');
                 
                 this.fields = {
                     orderer: document.getElementById('orderer'),
@@ -986,6 +1030,7 @@ Antwort im gleichen JSON-Format:
                 this.apiSection.style.display = 'none';
                 this.fieldsSection.style.display = 'none';
                 this.resultSection.style.display = 'none';
+                this.emailSection.style.display = 'none';
                 this.status.textContent = 'Bereit zum Aufnehmen';
                 
                 Object.values(this.fields).forEach(field => field.value = '');
@@ -1050,7 +1095,78 @@ Antwort im gleichen JSON-Format:
                 // Felder befüllen
                 ProductProcessor.validateAndFillFields(result, this.fields);
                 
+                // Daten für E-Mail speichern
+                this.orderData = {
+                    customer: this.selectedCustomer,
+                    transcription: result.transcription,
+                    extraction: result.extraction
+                };
+                
+                // E-Mail-Section anzeigen
+                this.emailSection.style.display = 'block';
+                
                 this.resultSection.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            // ========== E-MAIL FUNKTIONEN ==========
+            sendEmail() {
+                if (!this.orderData) {
+                    alert('Keine Bestelldaten zum Versenden vorhanden.');
+                    return;
+                }
+
+                const recipient = 'info@beko-group.com';
+                const subject = 'ADM Auftrag';
+                const body = this.formatEmailBody(this.orderData);
+                
+                // MailTo-Link erstellen
+                const mailtoLink = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                
+                // E-Mail-Client öffnen
+                window.location.href = mailtoLink;
+            }
+            
+            formatEmailBody(data) {
+                const { customer, transcription, extraction } = data;
+                const currentDate = new Date().toLocaleString('de-DE');
+                
+                return `Sehr geehrte Damen und Herren,
+
+anbei übermittle ich eine neue Audio-Bestellung:
+
+═══════════════════════════════════════
+📋 BESTELLDETAILS
+═══════════════════════════════════════
+
+🏢 KUNDE:
+${customer.number} - ${customer.name}
+${customer.city}${customer.email ? '\n' + customer.email : ''}
+
+👤 BESTELLER:
+${extraction.orderer || 'Nicht angegeben'}
+
+ℹ️ INFO/BEMERKUNG:
+${extraction.info || 'Keine Angaben'}
+
+📦 ARTIKEL:
+${extraction.articles || 'Keine Artikel angegeben'}
+
+✅ BEREITS GELIEFERT:
+${extraction.alreadyDelivered || 'Nichts geliefert'}
+
+═══════════════════════════════════════
+🎤 ORIGINAL-TRANSKRIPTION
+═══════════════════════════════════════
+${transcription || 'Keine Transkription verfügbar'}
+
+═══════════════════════════════════════
+
+Erstellt am: ${currentDate}
+System: ADM Audio-Bestellsystem
+
+Bitte um zeitnahe Bearbeitung.
+
+Mit freundlichen Grüßen`;
             }
         }
     </script>
