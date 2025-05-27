@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vertreter Bestellung</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 16px;
+            color: #1d1d1f;
+        }
+        
+        .container {
+            max-width: 440px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, rgba(0, 122, 255, 0.08) 0%, rgba(88, 86, 214, 0.08) 100%);
+            padding: 24px;
+            text-align: center;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        }
+        
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 6px;
+        }
+        
+        .header p {
+            font-size: 14px;
+            color: #86868b;
+            font-weight: 400;
+        }
+        
+        .content {
+            padding: 20px;
+        }
+        
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 16px;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+        
+        .section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .customer-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1.5px solid #e5e5e7;
+            border-radius: 10px;
+            font-size: 15px;
+            font-family: inherit;
+            background: #fafafa;
+            color: #1d1d1f;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .customer-select:focus {
+            outline: none;
+            border-color: #007aff;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+        
+        .customer-info {
+            margin-top: 12px;
+            padding: 12px;
+            background: rgba(0, 122, 255, 0.05);
+            border-radius: 8px;
+            font-size: 13px;
+            color: #007aff;
+            display: none;
+        }
+        
+        .recording-section {
+            text-align: center;
+            padding: 24px;
+            background: rgba(248, 248, 248, 0.6);
+            border-radius: 16px;
+        }
+        
+        .record-button {
+            background: linear-gradient(135deg, #007aff 0%, #5856d6 100%);
+            border: none;
+            border-radius: 50%;
+            width: 64px;
+            height: 64px;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .record-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 122, 255, 0.4);
+        }
+        
+        .record-button:disabled {
+            background: #c7c7cc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .record-button.recording {
+            background: linear-gradient(135deg, #ff3b30 0%, #ff9500 100%);
+            animation: pulse 2s infinite ease-in-out;
+            box-shadow: 0 4px 16px rgba(255, 59, 48, 0.4);
+        }
+        
+        .record-button.processing {
+            background: linear-gradient(135deg, #34c759 0%, #30d158 100%);
+            animation: spin 2s linear infinite;
+            box-shadow: 0 4px 16px rgba(48, 209, 88, 0.4);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .status {
+            font-size: 14px;
+            color: #86868b;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .timer {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 16px;
+            color: #ff3b30;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .audio-preview {
+            margin: 16px 0;
+            display: none;
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .audio-preview audio {
+            width: 100%;
+            margin-bottom: 12px;
+            height: 32px;
+        }
+        
+        .delete-btn {
+            background: #ff3b30;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .delete-btn:hover {
+            background: #e60012;
+        }
+        
+        .api-section {
+            background: linear-gradient(135deg, #fff8e1 0%, #fff3c4 100%);
+            border: 1px solid rgba(184, 134, 11, 0.2);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .api-warning {
+            color: #b8860b;
+            font-size: 13px;
+            line-height: 1.4;
+            margin-bottom: 12px;
+        }
+        
+        .api-warning a {
+            color: #007aff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .api-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid rgba(184, 134, 11, 0.3);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            background: rgba(255, 255, 255, 0.7);
+            margin-bottom: 12px;
+        }
+        
+        .api-input:focus {
+            outline: none;
+            border-color: #007aff;
+            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
+        }
+        
+        .process-button {
+            background: linear-gradient(135deg, #007aff 0%, #5856d6 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+        }
+        
+        .process-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
+        }
+        
+        .process-button:disabled {
+            background: #c7c7cc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .fields-grid {
+            display: grid;
+            gap: 16px;
+        }
+        
+        .field-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .field-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1d1d1f;
+            margin-bottom: 6px;
+        }
+        
+        .field-input {
+            padding: 10px 12px;
+            border: 1.5px solid #e5e5e7;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            background: #fafafa;
+            color: #1d1d1f;
+            transition: all 0.2s ease;
+            resize: vertical;
+            min-height: 40px;
+        }
+        
+        .field-input:focus {
+            outline: none;
+            border-color: #007aff;
+            background: white;
+            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
+        }
+        
+        .field-input.textarea {
+            min-height: 60px;
+            line-height: 1.4;
+        }
+        
+        .field-highlight {
+            animation: highlight 0.8s ease-out;
+        }
+        
+        @keyframes highlight {
+            0% { 
+                background-color: rgba(52, 199, 89, 0.2);
+                border-color: #34c759;
+            }
+            100% { 
+                background-color: #fafafa;
+                border-color: #e5e5e7;
+            }
+        }
+        
+        .progress-container {
+            margin: 12px 0;
+            display: none;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 3px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #007aff, #5856d6);
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+        
+        .result-section {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 16px;
+        }
+        
+        .result-section h3 {
+            color: #0369a1;
+            margin-bottom: 12px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+        
+        .transcription {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #1d1d1f;
+            border-left: 3px solid #34c759;
+        }
+        
+        .transcription strong {
+            color: #34c759;
+            font-weight: 600;
+        }
+        
+        .instruction {
+            background: linear-gradient(135deg, rgba(52, 199, 89, 0.1) 0%, rgba(46, 160, 67, 0.1) 100%);
+            color: #1b5e20;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            line-height: 1.5;
+            margin-bottom: 16px;
+            border-left: 4px solid #34c759;
+            border: 1px solid rgba(52, 199, 89, 0.2);
+        }
+        
+        .instruction strong {
+            color: #2e7d32;
+            font-weight: 600;
+        }
+        
+        .instruction ul {
+            margin: 8px 0 0 16px;
+            padding: 0;
+        }
+        
+        .instruction li {
+            margin-bottom: 4px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 500px) {
+            .container {
+                margin: 8px;
+                border-radius: 16px;
+            }
+            
+            .content {
+                padding: 16px;
+            }
+            
+            .header {
+                padding: 20px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Bestellung</h1>
+            <p>Kunde wählen → Sprechen → Fertig</p>
+        </div>
+        
+        <div class="content">
+            <!-- Customer Selection -->
+            <div class="section">
+                <h3>🏢 Kunde auswählen</h3>
+                <select class="customer-select" id="customerSelect">
+                    <option value="">Kunde auswählen...</option>
+                </select>
+                <div class="customer-info" id="customerInfo"></div>
+            </div>
+            
+            <!-- Recording Section -->
+            <div class="section">
+                <h3>🎤 Bestelldetails sprechen</h3>
+                <div class="instruction">
+                    <strong>Sprechen Sie strukturiert:</strong>
+                    <ul>
+                        <li><strong>Besteller:</strong> "Besteller ist Herr Müller"</li>
+                        <li><strong>Info:</strong> "Info dringend bis Freitag"</li>
+                        <li><strong>Artikel:</strong> "Artikel 20 Stück Schrauben M8 und 5 Liter Kleber"</li>
+                        <li><strong>Geliefert:</strong> "Bereits geliefert 10 Stück gestern"</li>
+                    </ul>
+                </div>
+                
+                <div class="recording-section">
+                    <button class="record-button" id="recordButton" disabled>
+                        <span>🎤</span>
+                    </button>
+                    <div class="timer" id="timer" style="display: none;">00:00</div>
+                    <div class="status" id="status">Zuerst Kunde auswählen</div>
+                    <div class="progress-container" id="progressContainer">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Audio Preview -->
+                <div class="audio-preview" id="audioPreview">
+                    <audio controls id="audioPlayer"></audio>
+                    <div style="text-align: center;">
+                        <button class="delete-btn" onclick="vertriebsApp.deleteRecording()">🗑️ Neu aufnehmen</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- API Section -->
+            <div class="api-section" id="apiSection" style="display: none;">
+                <div class="api-warning">
+                    <strong>API-Key:</strong> Kostenloser Schlüssel bei 
+                    <a href="https://ai.google.dev/" target="_blank">Google AI Studio</a>
+                </div>
+                <input type="password" class="api-input" id="apiKey" placeholder="Gemini API Key">
+                <button class="process-button" id="processButton" disabled>🧠 Verarbeiten</button>
+            </div>
+            
+            <!-- Fields -->
+            <div class="section" id="fieldsSection" style="display: none;">
+                <h3>📝 Bestelldetails</h3>
+                <div class="fields-grid">
+                    <div class="field-group">
+                        <label class="field-label">Besteller</label>
+                        <input type="text" class="field-input" id="orderer" placeholder="Wird automatisch extrahiert">
+                    </div>
+                    
+                    <div class="field-group">
+                        <label class="field-label">Info/Bemerkung</label>
+                        <input type="text" class="field-input" id="info" placeholder="Wird automatisch extrahiert">
+                    </div>
+                    
+                    <div class="field-group">
+                        <label class="field-label">Artikel</label>
+                        <textarea class="field-input textarea" id="articles" placeholder="Wird automatisch extrahiert"></textarea>
+                    </div>
+                    
+                    <div class="field-group">
+                        <label class="field-label">Bereits geliefert</label>
+                        <textarea class="field-input textarea" id="alreadyDelivered" placeholder="Wird automatisch extrahiert"></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Results -->
+            <div class="result-section" id="resultSection" style="display: none;">
+                <h3>✅ Transkription</h3>
+                <div class="transcription" id="transcriptionResult">
+                    <span id="transcriptionText"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== KONFIGURATION & KORREKTUREN ========== -->
+    <script>
+        // HIER DEINE PRODUKTKORREKTUREN EINFÜGEN:
+        const PRODUCT_CORRECTIONS = {
+            // Häufige Schreibfehler → Korrekte Bezeichnung
+            "alkon": "Allcon",
+            "allkon": "Allcon", 
+            "silikon": "Silicon",
+            "silikone": "Silicon",
+            "glättemittel": "Glättemittel",
+            "glaettemittel": "Glättemittel",
+            "pro4": "pro 4",
+            "pro-4": "pro 4",
+            // WEITERE KORREKTUREN HIER ERGÄNZEN:
+        };
+
+        // Dummy-Kundendaten für Tests
+        const CUSTOMERS = [
+            // Berlin (5x)
+            { id: 1001, number: "101001", name: "Berliner Baustoffe GmbH", city: "Berlin", email: "info@berliner-baustoffe.de" },
+            { id: 1002, number: "101002", name: "Spree Handwerk AG", city: "Berlin", email: "kontakt@spree-handwerk.de" },
+            { id: 1003, number: "101003", name: "Hauptstadt Farben GmbH", city: "Berlin", email: "berlin@hauptstadt-farben.de" },
+            { id: 1004, number: "101004", name: "Brandenburg Werkzeuge KG", city: "Berlin", email: "service@brandenburg-tools.de" },
+            { id: 1005, number: "101005", name: "Metro Bauelemente GmbH", city: "Berlin", email: "info@metro-bau.de" },
+            
+            // Potsdam (5x)
+            { id: 2001, number: "102001", name: "Potsdamer Baumarkt GmbH", city: "Potsdam", email: "info@potsdamer-baumarkt.de" },
+            { id: 2002, number: "102002", name: "Havel Handels GmbH", city: "Potsdam", email: "kontakt@havel-handel.de" },
+            { id: 2003, number: "102003", name: "Schloss Baustoffe KG", city: "Potsdam", email: "service@schloss-bau.de" },
+            { id: 2004, number: "102004", name: "Park Sanssouci Farben", city: "Potsdam", email: "info@sanssouci-farben.de" },
+            { id: 2005, number: "102005", name: "Brandenburger Tor Handel", city: "Potsdam", email: "bthandel@potsdam.de" },
+            
+            // Celle (5x)
+            { id: 3001, number: "103001", name: "Celler Bau-Zentrum GmbH", city: "Celle", email: "info@celler-bauzentrum.de" },
+            { id: 3002, number: "103002", name: "Heide Baustoffe AG", city: "Celle", email: "kontakt@heide-baustoffe.de" },
+            { id: 3003, number: "103003", name: "Aller Handwerk GmbH", city: "Celle", email: "service@aller-handwerk.de" },
+            { id: 3004, number: "103004", name: "Schloss Celle Farben", city: "Celle", email: "info@celle-farben.de" },
+            { id: 3005, number: "103005", name: "Niedersachsen Werkzeuge", city: "Celle", email: "info@ns-werkzeuge.de" },
+            
+            // Hannover (5x)
+            { id: 4001, number: "104001", name: "Hannover Bau-Profi GmbH", city: "Hannover", email: "info@hannover-bauprofi.de" },
+            { id: 4002, number: "104002", name: "Leine Handels AG", city: "Hannover", email: "kontakt@leine-handel.de" },
+            { id: 4003, number: "104003", name: "Messe Stadt Baustoffe", city: "Hannover", email: "service@messestadt-bau.de" },
+            { id: 4004, number: "104004", name: "Herrenhausen Farben GmbH", city: "Hannover", email: "info@herrenhausen-farben.de" },
+            { id: 4005, number: "104005", name: "Niedersachsen Zentral-Handel", city: "Hannover", email: "zentral@nz-handel.de" }
+        ];
+    </script>
+
+    <!-- ========== GEMINI API HANDLER ========== -->
+    <script>
+        class GeminiAPI {
+            constructor(apiKey) {
+                this.apiKey = apiKey;
+                this.baseURL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent';
+            }
+
+            async callAPI(prompt, audioBase64 = null) {
+                // Parts-Array je nach dem ob Audio vorhanden ist
+                const parts = [{ text: prompt }];
+                
+                // Audio nur hinzufügen wenn vorhanden
+                if (audioBase64) {
+                    parts.push({
+                        inline_data: {
+                            mime_type: 'audio/webm',
+                            data: audioBase64.split(',')[1]
+                        }
+                    });
+                }
+
+                const response = await fetch(`${this.baseURL}?key=${this.apiKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: parts
+                        }],
+                        generationConfig: {
+                            temperature: 0.1,
+                            maxOutputTokens: 1024,
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API Fehler: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.candidates[0].content.parts[0].text;
+            }
+
+            // Schritt 1: Rohe Extraktion
+            async extractRawData(customer, audioBase64) {
+                const prompt = `
+Du bist ein Experte für Bestellabwicklung. Analysiere diese deutsche Audio-Aufnahme und extrahiere EXAKT diese 4 Informationen:
+
+KONTEXT: 
+- Kunde: "${customer.name}" (Kundennummer: ${customer.number})
+- Der Sprecher ist ein Verkäufer/Vertreter der eine Bestellung diktiert
+
+EXTRAKTIONSREGELN:
+
+1. BESTELLER (orderer):
+   - Suche nach: "Besteller", "Ansprechpartner", "für Herrn/Frau", Namen nach "an"
+   - Format: "Herr Müller" oder "Frau Schmidt" oder "Max Mustermann"
+
+2. INFO (info):
+   - Suche nach: "Info", "Bemerkung", "wichtig", "dringend", "bis", Terminen, Prioritäten
+   - Beispiele: "dringend", "bis Freitag", "Eilauftrag"
+
+3. ARTIKEL (articles):
+   - Suche nach: Mengenangaben + Produktnamen, "Stück", "mal", "x"
+   - WICHTIG: Erkenne Artikel-Sequenzen wie "20 mal alkon 10 artikelnummer 260 100 310 30 mal glättemittel"
+   - Format: "Menge Produktname (Art-Nr: XXXXX)" pro Zeile
+   - Trenne verschiedene Artikel mit Zeilenumbruch
+
+4. BEREITS GELIEFERT (alreadyDelivered):
+   - Suche nach: "bereits", "schon", "geliefert", "erhalten"
+   - Format: "Menge Produktname" + optional Datum
+
+Antwort in JSON-Format:
+{
+  "transcription": "[gesamter gesprochener Text]",
+  "extraction": {
+    "orderer": "Besteller oder null",
+    "info": "Info oder null",
+    "articles": "Artikel-Liste oder null",
+    "alreadyDelivered": "Gelieferte Artikel oder null"
+  }
+}
+
+Verwende echte null-Werte für leere Felder.
+`;
+                return await this.callAPI(prompt, audioBase64);
+            }
+
+            // Schritt 2: Produktkorrektur
+            async correctProducts(rawData) {
+                const corrections = Object.entries(PRODUCT_CORRECTIONS)
+                    .map(([wrong, correct]) => `"${wrong}" → "${correct}"`)
+                    .join('\n');
+
+                const prompt = `
+Korrigiere die Produktnamen in dieser Bestellung basierend auf häufigen Schreibfehlern:
+
+BEKANNTE KORREKTUREN:
+${corrections}
+
+ROHDATEN:
+${JSON.stringify(rawData, null, 2)}
+
+AUFGABE:
+1. Korrigiere alle Produktnamen in den "articles" und "alreadyDelivered" Feldern
+2. Formatiere Artikelnummern sauber (z.B. "260 100 310" → "260100310")
+3. Strukturiere Artikel-Listen übersichtlich
+
+Antwort im gleichen JSON-Format:
+{
+  "transcription": "[gleich lassen]",
+  "extraction": {
+    "orderer": "[gleich lassen]",
+    "info": "[gleich lassen]", 
+    "articles": "[korrigierte Artikel-Liste]",
+    "alreadyDelivered": "[korrigierte gelieferte Artikel]"
+  }
+}
+`;
+                return await this.callAPI(prompt, null);
+            }
+        }
+    </script>
+
+    <!-- ========== AUDIO HANDLER ========== -->
+    <script>
+        class AudioHandler {
+            constructor() {
+                this.mediaRecorder = null;
+                this.audioChunks = [];
+                this.audioBlob = null;
+                this.isRecording = false;
+                this.startTime = null;
+                this.timerInterval = null;
+            }
+
+            async checkMicrophoneSupport() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    stream.getTracks().forEach(track => track.stop());
+                    return true;
+                } catch (error) {
+                    return false;
+                }
+            }
+
+            async startRecording() {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        sampleRate: 44100
+                    } 
+                });
+                
+                this.mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'
+                });
+                
+                this.audioChunks = [];
+                this.isRecording = true;
+                this.startTime = Date.now();
+                
+                this.mediaRecorder.ondataavailable = (event) => {
+                    this.audioChunks.push(event.data);
+                };
+                
+                this.mediaRecorder.onstop = () => {
+                    this.audioBlob = new Blob(this.audioChunks, { 
+                        type: this.mediaRecorder.mimeType 
+                    });
+                    stream.getTracks().forEach(track => track.stop());
+                };
+                
+                this.mediaRecorder.start();
+            }
+
+            stopRecording() {
+                if (this.mediaRecorder && this.isRecording) {
+                    this.mediaRecorder.stop();
+                    this.isRecording = false;
+                }
+            }
+
+            startTimer(callback) {
+                this.timerInterval = setInterval(() => {
+                    const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+                    const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                    const seconds = (elapsed % 60).toString().padStart(2, '0');
+                    callback(`${minutes}:${seconds}`);
+                }, 1000);
+            }
+
+            stopTimer() {
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null;
+                }
+            }
+
+            blobToBase64(blob) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+            }
+
+            getAudioBlob() {
+                return this.audioBlob;
+            }
+
+            clearRecording() {
+                this.audioBlob = null;
+                this.audioChunks = [];
+            }
+        }
+    </script>
+
+    <!-- ========== PRODUCT PROCESSOR ========== -->
+    <script>
+        class ProductProcessor {
+            static parseGeminiResponse(responseText) {
+                try {
+                    const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/) || 
+                                     responseText.match(/\{[\s\S]*\}/);
+                    
+                    const jsonString = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : responseText;
+                    return JSON.parse(jsonString);
+                } catch (error) {
+                    console.error('JSON Parse Error:', error);
+                    return {
+                        transcription: responseText,
+                        extraction: {}
+                    };
+                }
+            }
+
+            static validateAndFillFields(result, fields) {
+                if (!result.extraction) return;
+
+                const mapping = {
+                    orderer: 'orderer',
+                    info: 'info',
+                    articles: 'articles',
+                    alreadyDelivered: 'alreadyDelivered'
+                };
+                
+                Object.entries(mapping).forEach(([key, fieldKey]) => {
+                    const value = result.extraction[key];
+                    if (value && value !== null && typeof value === 'string' && value.trim() !== '') {
+                        const field = fields[fieldKey];
+                        field.value = value.trim();
+                        field.classList.add('field-highlight');
+                        setTimeout(() => field.classList.remove('field-highlight'), 800);
+                    }
+                });
+            }
+        }
+    </script>
+
+    <!-- ========== MAIN APP ========== -->
+    <script>
+        class VertriebsApp {
+            constructor() {
+                this.audioHandler = new AudioHandler();
+                this.geminiAPI = null;
+                this.selectedCustomer = null;
+                
+                this.initElements();
+                this.populateCustomers();
+                this.bindEvents();
+                this.checkMicrophone();
+            }
+            
+            initElements() {
+                this.customerSelect = document.getElementById('customerSelect');
+                this.customerInfo = document.getElementById('customerInfo');
+                this.recordButton = document.getElementById('recordButton');
+                this.timer = document.getElementById('timer');
+                this.status = document.getElementById('status');
+                this.progressContainer = document.getElementById('progressContainer');
+                this.progressFill = document.getElementById('progressFill');
+                this.audioPreview = document.getElementById('audioPreview');
+                this.audioPlayer = document.getElementById('audioPlayer');
+                this.apiSection = document.getElementById('apiSection');
+                this.apiKey = document.getElementById('apiKey');
+                this.processButton = document.getElementById('processButton');
+                this.fieldsSection = document.getElementById('fieldsSection');
+                this.resultSection = document.getElementById('resultSection');
+                this.transcriptionText = document.getElementById('transcriptionText');
+                
+                this.fields = {
+                    orderer: document.getElementById('orderer'),
+                    info: document.getElementById('info'),
+                    articles: document.getElementById('articles'),
+                    alreadyDelivered: document.getElementById('alreadyDelivered')
+                };
+            }
+            
+            populateCustomers() {
+                CUSTOMERS.forEach(customer => {
+                    const option = document.createElement('option');
+                    option.value = customer.id;
+                    option.textContent = `${customer.number} - ${customer.name}`;
+                    this.customerSelect.appendChild(option);
+                });
+            }
+            
+            bindEvents() {
+                this.customerSelect.addEventListener('change', () => this.selectCustomer());
+                this.recordButton.addEventListener('click', () => this.toggleRecording());
+                this.processButton.addEventListener('click', () => this.processWithGemini());
+                this.apiKey.addEventListener('input', () => this.updateProcessButton());
+            }
+
+            async checkMicrophone() {
+                const hasAccess = await this.audioHandler.checkMicrophoneSupport();
+                if (!hasAccess) {
+                    this.status.textContent = 'Mikrofon-Zugriff erforderlich';
+                }
+            }
+            
+            selectCustomer() {
+                const customerId = parseInt(this.customerSelect.value);
+                this.selectedCustomer = CUSTOMERS.find(c => c.id === customerId);
+                
+                if (this.selectedCustomer) {
+                    this.customerInfo.innerHTML = `
+                        <strong>${this.selectedCustomer.number}</strong> - ${this.selectedCustomer.name}<br>
+                        ${this.selectedCustomer.city}${this.selectedCustomer.email ? ` • ${this.selectedCustomer.email}` : ''}
+                    `;
+                    this.customerInfo.style.display = 'block';
+                    this.recordButton.disabled = false;
+                    this.status.textContent = 'Bereit zum Aufnehmen';
+                } else {
+                    this.customerInfo.style.display = 'none';
+                    this.recordButton.disabled = true;
+                    this.status.textContent = 'Zuerst Kunde auswählen';
+                }
+            }
+
+            async toggleRecording() {
+                if (this.audioHandler.isRecording) {
+                    await this.stopRecording();
+                } else {
+                    await this.startRecording();
+                }
+            }
+
+            async startRecording() {
+                try {
+                    await this.audioHandler.startRecording();
+                    this.updateRecordingUI();
+                    this.audioHandler.startTimer((time) => {
+                        this.timer.textContent = time;
+                    });
+                } catch (error) {
+                    console.error('Recording error:', error);
+                    this.status.textContent = 'Fehler beim Starten';
+                }
+            }
+
+            async stopRecording() {
+                this.audioHandler.stopRecording();
+                this.audioHandler.stopTimer();
+                this.updateStoppedUI();
+                
+                // Wait for audio blob to be ready
+                setTimeout(() => {
+                    this.showAudioPreview();
+                }, 100);
+            }
+
+            updateRecordingUI() {
+                this.recordButton.classList.add('recording');
+                this.recordButton.innerHTML = '<span>⏹️</span>';
+                this.status.textContent = 'Aufnahme läuft...';
+                this.timer.style.display = 'block';
+            }
+            
+            updateStoppedUI() {
+                this.recordButton.classList.remove('recording');
+                this.recordButton.innerHTML = '<span>🎤</span>';
+                this.status.textContent = 'Aufnahme beendet';
+                this.timer.style.display = 'none';
+            }
+            
+            showAudioPreview() {
+                const audioBlob = this.audioHandler.getAudioBlob();
+                if (audioBlob) {
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    this.audioPlayer.src = audioUrl;
+                    this.audioPreview.style.display = 'block';
+                    this.apiSection.style.display = 'block';
+                    this.fieldsSection.style.display = 'block';
+                    this.updateProcessButton();
+                }
+            }
+
+            updateProcessButton() {
+                const hasKey = this.apiKey.value.trim() !== '';
+                const hasAudio = this.audioHandler.getAudioBlob() !== null;
+                this.processButton.disabled = !hasKey || !hasAudio;
+            }
+            
+            deleteRecording() {
+                this.audioHandler.clearRecording();
+                this.audioPreview.style.display = 'none';
+                this.apiSection.style.display = 'none';
+                this.fieldsSection.style.display = 'none';
+                this.resultSection.style.display = 'none';
+                this.status.textContent = 'Bereit zum Aufnehmen';
+                
+                Object.values(this.fields).forEach(field => field.value = '');
+            }
+            
+            async processWithGemini() {
+                const apiKey = this.apiKey.value.trim();
+                const audioBlob = this.audioHandler.getAudioBlob();
+                
+                if (!apiKey || !audioBlob || !this.selectedCustomer) {
+                    alert('API Key, Kunde und Audio erforderlich.');
+                    return;
+                }
+                
+                this.geminiAPI = new GeminiAPI(apiKey);
+                
+                this.processButton.disabled = true;
+                this.processButton.textContent = '🧠 Verarbeitung...';
+                this.recordButton.classList.add('processing');
+                this.progressContainer.style.display = 'block';
+                
+                try {
+                    // Schritt 1: Audio zu Base64
+                    const audioBase64 = await this.audioHandler.blobToBase64(audioBlob);
+                    this.progressFill.style.width = '25%';
+                    
+                    // Schritt 2: Rohe Extraktion
+                    const rawResponse = await this.geminiAPI.extractRawData(this.selectedCustomer, audioBase64);
+                    this.progressFill.style.width = '60%';
+                    
+                    const rawData = ProductProcessor.parseGeminiResponse(rawResponse);
+                    
+                    // Schritt 3: Produktkorrektur
+                    const correctedResponse = await this.geminiAPI.correctProducts(rawData);
+                    this.progressFill.style.width = '90%';
+                    
+                    const finalResult = ProductProcessor.parseGeminiResponse(correctedResponse);
+                    this.progressFill.style.width = '100%';
+                    
+                    // Schritt 4: Ergebnisse anzeigen
+                    this.displayResults(finalResult);
+                    
+                } catch (error) {
+                    console.error('Gemini Fehler:', error);
+                    alert(`Fehler: ${error.message}`);
+                } finally {
+                    this.processButton.disabled = false;
+                    this.processButton.textContent = '🧠 Verarbeiten';
+                    this.recordButton.classList.remove('processing');
+                    this.progressContainer.style.display = 'none';
+                    this.progressFill.style.width = '0%';
+                }
+            }
+            
+            displayResults(result) {
+                // Transkription anzeigen
+                if (result.transcription) {
+                    this.transcriptionText.textContent = result.transcription;
+                    this.resultSection.style.display = 'block';
+                }
+                
+                // Felder befüllen
+                ProductProcessor.validateAndFillFields(result, this.fields);
+                
+                this.resultSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+    </script>
+
+    <!-- ========== APP INITIALIZATION ========== -->
+    <script>
+        let vertriebsApp;
+        document.addEventListener('DOMContentLoaded', () => {
+            vertriebsApp = new VertriebsApp();
+        });
+    </script>
+</body>
+</html>
