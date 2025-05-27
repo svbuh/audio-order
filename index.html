@@ -617,45 +617,74 @@
         class GeminiAPI {
             constructor(apiKey) {
                 this.apiKey = apiKey;
-                this.baseURL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent';
+                this.baseURL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
             }
 
             async callAPI(prompt, audioBase64 = null) {
-                // Parts-Array je nach dem ob Audio vorhanden ist
-                const parts = [{ text: prompt }];
-                
-                // Audio nur hinzufügen wenn vorhanden
-                if (audioBase64) {
-                    parts.push({
-                        inline_data: {
-                            mime_type: 'audio/webm',
-                            data: audioBase64.split(',')[1]
-                        }
+                try {
+                    // Parts-Array je nach dem ob Audio vorhanden ist
+                    const parts = [{ text: prompt }];
+                    
+                    // Audio nur hinzufügen wenn vorhanden
+                    if (audioBase64) {
+                        parts.push({
+                            inline_data: {
+                                mime_type: 'audio/webm',
+                                data: audioBase64.split(',')[1]
+                            }
+                        });
+                    }
+
+                    const response = await fetch(`${this.baseURL}?key=${this.apiKey}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: parts
+                            }],
+                            generationConfig: {
+                                temperature: 0.1,
+                                maxOutputTokens: 1024,
+                            }
+                        })
                     });
-                }
 
-                const response = await fetch(`${this.baseURL}?key=${this.apiKey}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: parts
-                        }],
-                        generationConfig: {
-                            temperature: 0.1,
-                            maxOutputTokens: 1024,
+                    const data = await response.json();
+                    
+                    // Detailliertes Fehlerhandling
+                    if (!response.ok) {
+                        console.error('API Response:', data);
+                        if (response.status === 400) {
+                            throw new Error(`Ungültige Anfrage: ${data.error?.message || 'Prüfen Sie API-Key und Audio-Format'}`);
+                        } else if (response.status === 403) {
+                            throw new Error('API-Key ungültig oder keine Berechtigung');
+                        } else if (response.status === 429) {
+                            throw new Error('API-Limit erreicht. Warten Sie kurz und versuchen es erneut');
+                        } else {
+                            throw new Error(`API Fehler ${response.status}: ${data.error?.message || 'Unbekannter Fehler'}`);
                         }
-                    })
-                });
+                    }
 
-                if (!response.ok) {
-                    throw new Error(`API Fehler: ${response.status}`);
+                    // Prüfe ob Response das erwartete Format hat
+                    if (!data.candidates || !Array.isArray(data.candidates) || data.candidates.length === 0) {
+                        console.error('Unerwartete API-Antwort:', data);
+                        throw new Error('Keine gültige Antwort von der API erhalten');
+                    }
+
+                    const candidate = data.candidates[0];
+                    if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
+                        console.error('Kandidat hat kein Content:', candidate);
+                        throw new Error('API-Antwort enthält keinen Text-Content');
+                    }
+
+                    return candidate.content.parts[0].text;
+                    
+                } catch (error) {
+                    console.error('Gemini API Fehler:', error);
+                    throw error;
                 }
-
-                const data = await response.json();
-                return data.candidates[0].content.parts[0].text;
             }
 
             // Schritt 1: Rohe Extraktion
